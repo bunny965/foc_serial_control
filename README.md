@@ -1,4 +1,5 @@
 #Simple_FOC
+此包包含5个项目文件夹及一个串口测试脚本，这些项目是基于simplefoc库及参考官方文档进行开发，主要是为外界通过串口控制提供api，根据指令自由控制电机，您也可以自定义控制命令，下面描述了如何根据需求添加命令，在上层，您无需理会如何实现，串口测试脚本为上层自由控制提供了一个demo
 ##before start
 在主控上搭载simplefoc时使用此库，在开发过程中主要参考官方文档：
 
@@ -39,7 +40,9 @@ Eg:lolin32.......mcu.cpp not such file 之类的报错是由于esp6.0以下版�
 
 ---
 ##develop
-###电机控制：
+<details>
+###电机控制
+<summary><b>电机控制部分函数说明：</b></summary>：
 （*bldcmotor.c*内）
 
 
@@ -71,6 +74,7 @@ motor.move();
 motor1.move();
 command.run();
 ```
+</details>
 ###串口通信：
 #####project introduction
 
@@ -159,7 +163,7 @@ Target: 40.000
 
 
 
-#####project introduction
+project introduction
 
 <details>
 <summary><b>闭环速度控制 project说明</b></summary>
@@ -287,7 +291,7 @@ R:
 
 </details>
 
-#####project introduction
+project introduction
 <details>
 <summary><b>addcommand project说明</b></summary>
 project：addcommand给出了添加可用命令的demo
