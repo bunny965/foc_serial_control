@@ -1,6 +1,4 @@
 #Simple_FOC
-此包包含5个项目文件夹及一个串口测试脚本，这些项目是基于simplefoc库及参考官方文档进行开发，主要是为外界通过串口控制提供api，根据指令自由控制电机，您也可以自定义控制命令，下面描述了如何根据需求添加命令，在上层，您无需理会如何实现，串口测试脚本为上层自由控制提供了一个demo
-
 ##before start
 在主控上搭载simplefoc时使用此库，在开发过程中主要参考官方文档：
 
@@ -41,9 +39,7 @@ Eg:lolin32.......mcu.cpp not such file 之类的报错是由于esp6.0以下版�
 
 ---
 ##develop
-<details>
-###电机控制
-<summary><b>电机控制部分函数说明：</b></summary>：
+###电机控制：
 （*bldcmotor.c*内）
 
 
@@ -75,9 +71,8 @@ motor.move();
 motor1.move();
 command.run();
 ```
-</details>
+---
 ###串口通信：
-
 #####project introduction
 
 <details>
@@ -165,7 +160,7 @@ Target: 40.000
 
 
 
-project introduction
+#####project introduction
 
 <details>
 <summary><b>闭环速度控制 project说明</b></summary>
@@ -212,11 +207,12 @@ Target: 4.000
     motor.move( 5*(motor1.shaft_angle - motor.shaft_angle));
     motor1.move( 5*(motor.shaft_angle - motor1.shaft_angle));
     ```
+
 </details>
 #####project introduction
-<details>
+<、details>
 
-<summary><b>串口控制1.0 project说明</b></summary>
+<summary><b>串口控制1.0/2.0 project说明</b></summary>
 
 在project：*串口控制1.0*中，使用此项目提供的接口用于串口控制电机，通讯协议：(*2.0*添加了monitor命令，在某种控制模式下按C进入)
 
@@ -275,7 +271,7 @@ S:
 
 >A3
 
-首次控制电机请重复8次，首次退出命令也需输入19次后正常
+首次控制电机请重复8次，首次退出命令也需输入10次后正常
 *tip:*首次在监控模式下进行串口控制有个bug，前8次命令会无效，直到第九次命令有效后才能正常控制
 R:
 >
@@ -291,11 +287,37 @@ R:
 *tip：*在文件夹内包含一个用户测试的脚本*serialtest.py*，可自行更改用于测试）
 在速度控制时请不要随意执行模式切换指令，先按1退出操作后再切换mode，
 
-</details>
 
-project introduction
+在2.0版本之前有一个问题：退出*move*循环后切换为位置模式，位置若不处于预期值会一直旋转直到回到预期值，**3.0**更新了此操作，再次进入*move*循环时
+重置**shaft_angle**的值，此功能位于函数```reset_target(FOCMotor* motor);```中,但```move()```函数内的
+```c++
+shaft_angle = shaftAngle(); // read value even if motor is disabled to keep the monitoring updated but not in openloop mode
+```
+ 会导致**shaft_angle**被置为读取到的位置值,其值由**sensor_direction*LPF_angle(sensor->getAngle()) - sensor_offset**得到，（**sensor_offset**为零漂）
+ 如果要其退出后再进入由于**shaft_angle**远离**shaft_angle_sp**导致进入move后会一直往**sp**靠近，可将sp设为目前的angle，
+ 若要第n次进入时重新使初始位置即起始位置，可保存切换模式前的位置**shaft_angle_bef=shaft_angle**,再在串口命令解析函数后的```target()```加上**shaft_angle_bef**
+ ```c++
+ void Commander::target(FOCMotor* motor,  char* user_cmd, char* separator){
+  ...
+  switch(motor->controller){
+    ...
+    case MotionControlType::angle:
+      pos= atof(strtok (user_cmd, separator));
+      pos += shaft_angle_bef;
+      motor->target = pos;
+  }
+ }
+ ```
+ 但不建议这么做，因为不清楚除了在**move()**中用到**target**，是否在其他地方需要，则执行其他功能函数时可能受影响
+
+采用置0式使再次进入位置控制时当前位置即0位置：或可在**BLDCMotor.cpp**内的**move()**中，**shaft_angle = shaftAngle();**前添加标志判断是否为切换模式的第一次进入**move()**，如果是，不获取底层sensor得到的位置，直接将**shaft_angle**、**target**、**shaft_angle_sp**设为0，但直接操作shaftAngle可能会使其丢失从开机到目前的旋转角度（或许可以从sensor再次读取）
+最粗暴的方法：在每次退出后输入**p**指令时直接init电机可直接全员置0
+推荐仅执行```reset_target()```函数，仍然使用绝对角度来position控制
+<、details>
+
+#####project introduction
 <details>
-<summary><b>addcommand project说明</b></summary>
+<summary><b>add_command project说明</b></summary>
 project：addcommand给出了添加可用命令的demo
 *command.cpp*文件里引出了很多控制接口，但需通过回调函数引出到用户串口控制
 如:pid函数：
