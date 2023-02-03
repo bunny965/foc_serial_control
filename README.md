@@ -210,7 +210,7 @@ Target: 4.000
 
 </details>
 #####project introduction
-<、details>
+<details>
 
 <summary><b>串口控制1.0/2.0 project说明</b></summary>
 
@@ -313,7 +313,7 @@ shaft_angle = shaftAngle(); // read value even if motor is disabled to keep the 
 采用置0式使再次进入位置控制时当前位置即0位置：或可在**BLDCMotor.cpp**内的**move()**中，**shaft_angle = shaftAngle();**前添加标志判断是否为切换模式的第一次进入**move()**，如果是，不获取底层sensor得到的位置，直接将**shaft_angle**、**target**、**shaft_angle_sp**设为0，但直接操作shaftAngle可能会使其丢失从开机到目前的旋转角度（或许可以从sensor再次读取）
 最粗暴的方法：在每次退出后输入**p**指令时直接init电机可直接全员置0
 推荐仅执行```reset_target()```函数，仍然使用绝对角度来position控制
-<、details>
+</details>
 
 #####project introduction
 <details>
