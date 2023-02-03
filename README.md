@@ -304,8 +304,8 @@ R:
 shaft_angle = shaftAngle(); // read value even if motor is disabled to keep the monitoring updated but not in openloop mode
 ```
  会导致**shaft_angle**被置为读取到的位置值,其值由**sensor_direction*LPF_angle(sensor->getAngle()) - sensor_offset**得到，（**sensor_offset**为零漂）
- 如果要其退出后再进入由于**shaft_angle**远离**shaft_angle_sp**导致进入move后会一直往**sp**靠近，可将sp设为目前的angle，
- 若要第n次进入时重新使初始位置即起始位置，可保存切换模式前的位置**shaft_angle_bef=shaft_angle**,再在串口命令解析函数后的```target()```加上**shaft_angle_bef**
+ 如果要其退出后再进入由于**shaft_angle**远离**shaft_angle_sp**导致进入**move**后会一直往**shaft_angle_sp**靠近，可将**shaft_angle_sp**设为目前的**shaft_angle**，
+ 若要第n次进入时重新使初始位置即起始位置，可保存切换模式前(第n-1次)的位置**shaft_angle_bef=shaft_angle**,再在串口命令解析函数后的```target()```加上**shaft_angle_bef**
  ```c++
  void Commander::target(FOCMotor* motor,  char* user_cmd, char* separator){
   ...
@@ -320,7 +320,7 @@ shaft_angle = shaftAngle(); // read value even if motor is disabled to keep the 
  ```
  但不建议这么做，因为不清楚除了在**move()**中用到**target**，是否在其他地方需要，则执行其他功能函数时可能受影响
 
-采用置0式使再次进入位置控制时当前位置即0位置：或可在**BLDCMotor.cpp**内的**move()**中，**shaft_angle = shaftAngle();**前添加标志判断是否为切换模式的第一次进入**move()**，如果是，不获取底层sensor得到的位置，直接将**shaft_angle**、**target**、**shaft_angle_sp**设为0，但直接操作shaftAngle可能会使其丢失从开机到目前的旋转角度（或许可以从sensor再次读取）
+采用置0式使再次进入位置控制时当前位置即0位置：或可在**BLDCMotor.cpp**内的**move()**中，**shaft_angle = shaftAngle();** 前添加标志判断是否为切换模式的第一次进入**move()**，如果是，不获取底层sensor得到的位置，直接将**shaft_angle**、**target**、**shaft_angle_sp**设为0，但直接操作shaftAngle可能会使其丢失从开机到目前的旋转角度（或许可以从sensor再次读取）
 最粗暴的方法：在每次退出后输入**p**指令时直接init电机可直接全员置0
 推荐仅执行```reset_target()```函数，仍然使用绝对角度来position控制
 </details>
